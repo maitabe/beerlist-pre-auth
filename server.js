@@ -31,13 +31,19 @@ app.use(passport.initialize());
 app.use(passport.session());
 //------------------------
 
+//create a new session that give an id to the user
+//from here the user will be send back through the app.get /currentUser
 passport.serializeUser(function (user, done) {
   done(null, user);
 });
 
+//this will populate the req.user with the user JSON
+passport.deserializeUser(function (user, done) {
+  done(null, user);
+});
 
 //create a global middleware that intercept the request from  app.post
-//and verify if the data is authenticated
+//and verify if the data (user) is authenticated after this goes to serializeUser to create a new session
 passport.use('register', new LocalStrategy(function (username, password, done) {
   var user = {
     username: username,
@@ -50,10 +56,15 @@ passport.use('register', new LocalStrategy(function (username, password, done) {
 }));
 
 
-
 //register route
 app.post('/register', passport.authenticate('register'), function (req, res) {
+  //req.user contain the data fromthe auth.js factory and send it to the passport.use to verify the user
   res.json(req.user);
+});
+
+// send the current user back!
+app.get('/currentUser', function (req, res) {
+  res.send(req.user);
 });
 
 app.get('/beers', function (req, res) {
