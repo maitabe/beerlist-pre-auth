@@ -1,6 +1,8 @@
 var express = require('express');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
+//adding strategy to authenticate
+var LocalStrategy = require('passport-local').Strategy;
 
 mongoose.connect('mongodb://localhost/beers');
 
@@ -23,9 +25,30 @@ var expressSession = require('express-session');
 
 app.use(expressSession({ secret: 'mySecretKey' }));
 
+//initialize passport
 app.use(passport.initialize());
+//initialize session with passport
 app.use(passport.session());
 //------------------------
+
+passport.serializeUser(function (user, done) {
+  done(null, user);
+});
+
+
+//create a global middleware that intercept the request from  app.post
+//and verify if the data is authenticated
+passport.use('register', new LocalStrategy(function (username, password, done) {
+  var user = {
+    username: username,
+    password: password
+  };
+
+  console.log(user);
+
+  done(null, user);
+}));
+
 
 
 //register route
