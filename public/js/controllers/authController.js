@@ -1,5 +1,5 @@
 app.controller('AuthCtrl', ['$scope', 'auth', function($scope, auth){
   $scope.register = function () {
-    auth.register($scope.user);
+    auth.register($scope.user); //$http.post('/register', {username: "John", password: "Smith"})
   };
 }]);

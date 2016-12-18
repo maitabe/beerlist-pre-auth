@@ -5,6 +5,8 @@ var bodyParser = require('body-parser');
 var LocalStrategy = require('passport-local').Strategy;
 
 mongoose.connect('mongodb://localhost/beers');
+//change to mongoose default promises lib, when you call .then
+mongoose.Promise = global.Promise;
 
 var Beer = require("./models/BeerModel");
 var Review = require("./models/ReviewModel");
@@ -45,14 +47,38 @@ passport.deserializeUser(function (user, done) {
 //create a global middleware that intercept the request from  app.post
 //and verify if the data (user) is authenticated after this goes to serializeUser to create a new session
 passport.use('register', new LocalStrategy(function (username, password, done) {
-  var user = {
-    username: username,
-    password: password
-  };
+  User.findOne({ 'username': username }, function (err, user) {
+    // In case of any error return
+    if (err) {
+      console.log('Error in SignUp: ' + err);
+      return done(err);
+    }
 
-  console.log(user);
+    // already exists
+    if (user) {
+      console.log('User already exists');
+      return done(null, false);
+    } else {
+      // if there is no user with that matches
+      // create the user
+      var newUser = new User();
 
-  done(null, user);
+      // set the user's local credentials
+      newUser.username = username;
+      newUser.password = password;    // Note: Should create a hash out of this plain password!
+
+      // save the user
+      newUser.save(function (err) {
+        if (err) {
+          console.log('Error in Saving user: ' + err);
+          throw err;
+        }
+
+        console.log('User Registration successful');
+        return done(null, newUser);
+      });
+    }
+  });
 }));
 
 
